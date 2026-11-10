@@ -155,3 +155,84 @@ def stop_music():
         pygame.mixer.stop()
 
 
+# ==================================================
+# HELPER FUNCTIONS
+# ==================================================
+
+def draw_text(text, font, color, x, y, center=True):
+    image = font.render(str(text), True, color)
+    rect = image.get_rect()
+
+    if center:
+        rect.center = (x, y)
+    else:
+        rect.topleft = (x, y)
+
+    screen.blit(image, rect)
+
+
+def button(rect, text, selected=False):
+    color = (65, 90, 150) if selected else (40, 50, 85)
+
+    pygame.draw.rect(screen, color, rect, border_radius=10)
+    pygame.draw.rect(
+        screen,
+        CYAN if selected else GRAY,
+        rect,
+        2,
+        border_radius=10
+    )
+
+    draw_text(text, FONT, WHITE, rect.centerx, rect.centery)
+
+
+# ==================================================
+# PLAYER NAME
+# ==================================================
+
+def enter_name(current_name):
+    name = current_name
+
+    while True:
+        screen.fill(BLACK)
+
+        draw_text(
+            "ENTER PLAYER NAME",
+            BIG, CYAN, WIDTH//2, 190
+        )
+
+        rect = pygame.Rect(WIDTH//2-170, 260, 340, 55)
+
+        pygame.draw.rect(screen, DARK, rect, border_radius=8)
+        pygame.draw.rect(screen, CYAN, rect, 2, border_radius=8)
+
+        draw_text(name + "|", FONT, WHITE, WIDTH//2, 287)
+
+        draw_text(
+            "ENTER = Save | ESC = Cancel",
+            SMALL, GRAY, WIDTH//2, 350
+        )
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return None
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_RETURN:
+                    return name.strip()[:12] or "Player"
+
+                elif event.key == pygame.K_ESCAPE:
+                    return current_name
+
+                elif event.key == pygame.K_BACKSPACE:
+                    name = name[:-1]
+
+                elif event.unicode.isprintable() and len(name) < 12:
+                    name += event.unicode
+
+        clock.tick(FPS)
+
+
