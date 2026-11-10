@@ -1,0 +1,112 @@
+# BRICK BREAKER DELUXE
+### Dokumentasi Modifikasi Game Python menggunakan Pygame
+
+## 1. Deskripsi Proyek
+
+Brick Breaker merupakan permainan arcade sederhana yang dibuat menggunakan bahasa pemrograman Python dengan library Pygame.
+
+Tujuan permainan ini adalah menghancurkan seluruh balok menggunakan bola yang dipantulkan oleh sebuah pemukul (paddle). Pemain harus menjaga agar bola tidak jatuh melewati bagian bawah layar.
+
+Pada proyek ini dilakukan beberapa pengembangan fitur untuk meningkatkan pengalaman bermain dan membuat permainan lebih menarik.
+
+## 2. Daftar Modifikasi
+
+Berikut merupakan fitur-fitur yang ditambahkan pada game:
+
+### A. Menu Utama (Main Menu)
+Menambahkan tampilan menu utama yang terdiri dari:
+- Start Game
+- High Score
+- Exit
+- Pengaturan nama pemain
+
+### B. Pause dan Resume
+Menambahkan fitur untuk menghentikan permainan sementara.
+
+- Tombol P digunakan untuk Pause.
+- Tombol P atau SPACE digunakan untuk melanjutkan permainan.
+- Tombol ESC digunakan untuk kembali ke menu utama.
+
+### C. High Score
+Menambahkan sistem penyimpanan skor tertinggi pemain.
+
+- Skor tertinggi disimpan secara otomatis.
+- Nama pemain dicatat bersama skor tertinggi.
+- Data disimpan menggunakan file JSON.
+- Skor tertinggi tetap tersimpan meskipun game ditutup.
+
+### D. Sistem Level
+Menambahkan tiga level permainan dengan tingkat kesulitan berbeda.
+
+- Level 1: Permainan dasar.
+- Level 2: Jumlah balok bertambah dan sebagian balok membutuhkan dua kali pukulan.
+- Level 3: Tingkat kesulitan meningkat dengan kecepatan bola yang lebih tinggi.
+
+### E. Sound Effect dan Background Music
+Menambahkan suara untuk meningkatkan pengalaman bermain.
+
+- Suara ketika bola memantul.
+- Suara ketika balok hancur.
+- Suara ketika mendapatkan power-up.
+- Suara ketika pemain kehilangan nyawa.
+- Musik latar selama permainan.
+
+### F. Power-Up
+Menambahkan tiga jenis bonus yang dapat diperoleh pemain ketika menghancurkan balok.
+
+Simbol = W (Wide Paddle) =  Memperbesar pemukul sementara 
+         S (Slow Ball) =  Memperlambat bola sementara
+         + (Extra Life) = Menambahkan satu nyawa
+
+
+Setiap balok yang hancur memiliki peluang untuk menghasilkan power-up.
+
+### G. Game Over dan You Win
+Menambahkan tampilan akhir permainan yang menunjukkan:
+- Skor pemain.
+- High score.
+- Nama pemegang rekor tertinggi.
+- Informasi rekor baru jika berhasil dicapai.
+- Pilihan bermain kembali atau kembali ke menu.
+
+## 3. Dokumentasi Screenshot
+
+### 3.1 Menu Utama
+![Menu Utama](screenshots/menu.png)
+
+### 3.2 Tampilan Gameplay
+![Gameplay](screenshots/gameplay.png)
+
+### 3.3 Fitur Pause
+![Pause](screenshots/pause.png)
+
+### 3.4 Tampilan High Score
+![High Score](screenshots/highscore.png)
+
+### 3.5 Fitur Power-Up
+![Power Up](screenshots/powerup.png)
+
+## 4. Teknologi yang Digunakan
+
+- Python
+- Pygame
+- JSON
+- Visual Studio Code
+
+## 5. Cara Menjalankan Program
+
+1. Pastikan Python sudah terinstal.
+2. Instal library Pygame:
+
+   `pip install pygame`
+
+3. Buka folder proyek menggunakan Visual Studio Code.
+4. Jalankan file `modifygame.py` melalui terminal:
+
+   `python modifygame.py`
+
+## 6. Kesimpulan
+
+Melalui modifikasi ini, game Brick Breaker dikembangkan dengan menambahkan berbagai fitur seperti menu utama, pause, high score, sistem level, efek suara, musik latar, dan power-up.
+
+Pengembangan ini bertujuan untuk meningkatkan interaktivitas permainan, memberikan tantangan yang lebih bervariasi, serta membuat pengalaman bermain menjadi lebih menarik.
