@@ -596,3 +596,202 @@ def create_bricks(level):
     return bricks
 
 
+# ==================================================
+# POWER-UP CLASS
+# ==================================================
+
+class PowerUp:
+
+    def __init__(self, x, y, kind):
+        self.kind = kind
+        self.y = float(y)
+
+        self.rect = pygame.Rect(
+            x-12, y-10, 24, 20
+        )
+
+    def update(self):
+        self.y += 3
+        self.rect.y = round(self.y-10)
+
+    def draw(self):
+
+        colors = {
+            "wide": CYAN,
+            "slow": BLUE,
+            "life": RED
+        }
+
+        labels = {
+            "wide": "W",
+            "slow": "S",
+            "life": "+"
+        }
+
+        pygame.draw.rect(
+            screen,
+            colors[self.kind],
+            self.rect,
+            border_radius=5
+        )
+
+        draw_text(
+            labels[self.kind],
+            SMALL, BLACK,
+            self.rect.centerx,
+            self.rect.centery
+        )
+
+
+# ==================================================
+# PAUSE SCREEN
+# ==================================================
+
+def pause_screen():
+
+    overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 190))
+
+    screen.blit(overlay, (0, 0))
+
+    draw_text(
+        "PAUSED",
+        BIG, YELLOW,
+        WIDTH//2, HEIGHT//2-35
+    )
+
+    draw_text(
+        "P / SPACE = RESUME",
+        FONT, WHITE,
+        WIDTH//2, HEIGHT//2+20
+    )
+
+    draw_text(
+        "ESC = MAIN MENU",
+        SMALL, GRAY,
+        WIDTH//2, HEIGHT//2+60
+    )
+
+
+# ==================================================
+# GAME SCREEN
+# ==================================================
+
+def draw_game(paddle, ball, bricks, powerups,
+              score, lives, level, paused):
+
+    screen.fill(BLACK)
+
+    pygame.draw.line(
+        screen, DARK,
+        (0, 48), (WIDTH, 48), 2
+    )
+
+    draw_text(
+        f"Score: {score}",
+        SMALL, WHITE, 15, 14, False
+    )
+
+    draw_text(
+        f"Lives: {lives}",
+        SMALL, WHITE, 190, 14, False
+    )
+
+    draw_text(
+        f"Level: {level}/3",
+        SMALL, WHITE, 330, 14, False
+    )
+
+    draw_text(
+        "P: Pause",
+        SMALL, GRAY, WIDTH-110, 14, False
+    )
+
+    for brick in bricks:
+        brick.draw()
+
+    for powerup in powerups:
+        powerup.draw()
+
+    paddle.draw()
+    ball.draw()
+
+    if paused:
+        pause_screen()
+
+    pygame.display.flip()
+
+
+# ==================================================
+# GAME OVER / WIN SCREEN
+# ==================================================
+
+def end_screen(message, score, record, new_record):
+
+    while True:
+
+        screen.fill(BLACK)
+
+        draw_text(
+            message, BIG, YELLOW,
+            WIDTH//2, 145
+        )
+
+        draw_text(
+            f"Your Score: {score}",
+            FONT, WHITE,
+            WIDTH//2, 225
+        )
+
+        draw_text(
+            f"High Score: {record['score']}",
+            FONT, GREEN,
+            WIDTH//2, 275
+        )
+
+        draw_text(
+            f"Record Holder: {record['name']}",
+            SMALL, CYAN,
+            WIDTH//2, 315
+        )
+
+        if new_record:
+            draw_text(
+                "NEW HIGH SCORE!",
+                FONT, YELLOW,
+                WIDTH//2, 355
+            )
+
+        draw_text(
+            "R / ENTER = PLAY AGAIN",
+            SMALL, WHITE,
+            WIDTH//2, 420
+        )
+
+        draw_text(
+            "M = MAIN MENU | ESC = EXIT",
+            SMALL, GRAY,
+            WIDTH//2, 460
+        )
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                return "exit"
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key in (pygame.K_r, pygame.K_RETURN):
+                    return "restart"
+
+                if event.key == pygame.K_m:
+                    return "menu"
+
+                if event.key == pygame.K_ESCAPE:
+                    return "exit"
+
+        clock.tick(FPS)
+
+
