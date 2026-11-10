@@ -67,3 +67,91 @@ def save_record(name, score):
         print("High score gagal disimpan.")
 
 
+# ==================================================
+# SOUND EFFECT DAN MUSIK
+# ==================================================
+
+def create_sound(frequency, duration=0.12, volume=0.18):
+    rate = 44100
+    frames = bytearray()
+    count = int(rate * duration)
+
+    for i in range(count):
+        envelope = min(1, i / 300) * min(1, (count-i) / 500)
+        value = int(
+            32767 * volume * envelope *
+            math.sin(2 * math.pi * frequency * i / rate)
+        )
+        frames.extend(struct.pack("<h", value))
+
+    buffer = io.BytesIO()
+
+    with wave.open(buffer, "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(rate)
+        wav.writeframes(frames)
+
+    buffer.seek(0)
+    return pygame.mixer.Sound(buffer)
+
+
+SOUNDS = {}
+MUSIC = None
+
+try:
+    SOUNDS = {
+        "bounce": create_sound(520, 0.07),
+        "brick": create_sound(760, 0.10),
+        "power": create_sound(980, 0.18),
+        "lose": create_sound(180, 0.30),
+        "win": create_sound(880, 0.30)
+    }
+
+    # Membuat musik arcade sederhana
+    rate = 22050
+    notes = [262, 330, 392, 330, 294, 349, 440, 349]
+    frames = bytearray()
+
+    for frequency in notes * 2:
+        count = int(rate * 0.22)
+
+        for i in range(count):
+            envelope = min(1, i / 250) * min(1, (count-i) / 350)
+            value = int(
+                32767 * 0.05 * envelope *
+                math.sin(2 * math.pi * frequency * i / rate)
+            )
+            frames.extend(struct.pack("<h", value))
+
+    buffer = io.BytesIO()
+
+    with wave.open(buffer, "wb") as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(rate)
+        wav.writeframes(frames)
+
+    buffer.seek(0)
+    MUSIC = pygame.mixer.Sound(buffer)
+
+except (pygame.error, OSError):
+    SOUNDS = {}
+    MUSIC = None
+
+
+def sound(name):
+    if name in SOUNDS:
+        SOUNDS[name].play()
+
+
+def start_music():
+    if MUSIC is not None and not pygame.mixer.get_busy():
+        MUSIC.play(loops=-1)
+
+
+def stop_music():
+    if pygame.mixer.get_init():
+        pygame.mixer.stop()
+
+
