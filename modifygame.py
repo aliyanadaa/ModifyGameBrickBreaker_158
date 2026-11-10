@@ -236,3 +236,363 @@ def enter_name(current_name):
         clock.tick(FPS)
 
 
+# ==================================================
+# MAIN MENU
+# ==================================================
+
+def high_score_screen(record):
+    while True:
+        screen.fill(BLACK)
+
+        draw_text("HIGH SCORE", BIG, YELLOW, WIDTH//2, 190)
+        draw_text(record["name"], FONT, CYAN, WIDTH//2, 270)
+        draw_text(str(record["score"]), BIG, WHITE, WIDTH//2, 330)
+
+        draw_text(
+            "ENTER / ESC = Back",
+            SMALL, GRAY, WIDTH//2, 420
+        )
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_RETURN, pygame.K_ESCAPE):
+                    return True
+
+        clock.tick(FPS)
+
+
+def main_menu(record, player_name):
+
+    start_button = pygame.Rect(WIDTH//2-125, 270, 250, 52)
+    score_button = pygame.Rect(WIDTH//2-125, 340, 250, 52)
+    exit_button = pygame.Rect(WIDTH//2-125, 410, 250, 52)
+
+    while True:
+        screen.fill(BLACK)
+
+        draw_text(
+            "BRICK BREAKER",
+            TITLE, CYAN, WIDTH//2, 120
+        )
+
+        draw_text(
+            "DELUXE EDITION",
+            FONT, WHITE, WIDTH//2, 180
+        )
+
+        draw_text(
+            "Player: " + player_name,
+            SMALL, GRAY, WIDTH//2, 225
+        )
+
+        draw_text(
+            "Press N to change player name",
+            SMALL, GRAY, WIDTH//2, 245
+        )
+
+        mouse = pygame.mouse.get_pos()
+
+        button(start_button, "START GAME",
+               start_button.collidepoint(mouse))
+
+        button(score_button, "HIGH SCORE",
+               score_button.collidepoint(mouse))
+
+        button(exit_button, "EXIT",
+               exit_button.collidepoint(mouse))
+
+        draw_text(
+            "Use LEFT and RIGHT arrow keys to move",
+            SMALL, GRAY, WIDTH//2, 520
+        )
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                return "exit", player_name
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_ESCAPE:
+                    return "exit", player_name
+
+                if event.key == pygame.K_RETURN:
+                    return "start", player_name
+
+                if event.key == pygame.K_n:
+                    new_name = enter_name(player_name)
+
+                    if new_name is None:
+                        return "exit", player_name
+
+                    player_name = new_name
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+
+                    if start_button.collidepoint(event.pos):
+                        return "start", player_name
+
+                    if score_button.collidepoint(event.pos):
+                        if not high_score_screen(record):
+                            return "exit", player_name
+
+                    if exit_button.collidepoint(event.pos):
+                        return "exit", player_name
+
+        clock.tick(FPS)
+
+
+# ==================================================
+# PADDLE CLASS
+# ==================================================
+
+class Paddle:
+
+    def __init__(self):
+        self.width = 110
+        self.height = 16
+        self.speed = 8
+
+        self.x = (WIDTH-self.width)/2
+        self.y = HEIGHT-55
+
+        self.rect = pygame.Rect(
+            round(self.x), self.y,
+            self.width, self.height
+        )
+
+        self.big_timer = 0
+
+    def update(self, direction):
+        self.x += direction*self.speed
+
+        self.x = max(
+            0,
+            min(self.x, WIDTH-self.width)
+        )
+
+        self.rect.x = round(self.x)
+
+        if self.big_timer > 0:
+            self.big_timer -= 1
+
+            if self.big_timer == 0:
+                self.normal_size()
+
+    def big_size(self):
+        center = self.rect.centerx
+
+        self.width = 165
+        self.x = max(
+            0,
+            min(center-self.width/2, WIDTH-self.width)
+        )
+
+        self.rect.width = self.width
+        self.rect.x = round(self.x)
+
+        self.big_timer = FPS*8
+
+    def normal_size(self):
+        center = self.rect.centerx
+
+        self.width = 110
+        self.x = max(
+            0,
+            min(center-self.width/2, WIDTH-self.width)
+        )
+
+        self.rect.width = self.width
+        self.rect.x = round(self.x)
+
+    def draw(self):
+        pygame.draw.rect(
+            screen, CYAN, self.rect,
+            border_radius=8
+        )
+
+
+# ==================================================
+# BALL CLASS
+# ==================================================
+
+class Ball:
+
+    def __init__(self, speed):
+        self.radius = 9
+        self.base_speed = speed
+        self.reset()
+
+    @property
+    def speed(self):
+        if self.slow_timer > 0:
+            return self.base_speed*0.65
+
+        return self.base_speed
+
+    def update_rect(self):
+        self.rect = pygame.Rect(
+            round(self.x-self.radius),
+            round(self.y-self.radius),
+            self.radius*2,
+            self.radius*2
+        )
+
+    def reset(self):
+        self.x = WIDTH/2
+        self.y = HEIGHT-78
+
+        self.dx = random.choice([-0.65, 0.65])
+        self.dy = -0.76
+
+        self.slow_timer = 0
+        self.update_rect()
+
+    def update(self):
+
+        if self.slow_timer > 0:
+            self.slow_timer -= 1
+
+        self.x += self.dx*self.speed
+        self.y += self.dy*self.speed
+
+        # Wall collision
+        if self.x-self.radius <= 0:
+            self.x = self.radius
+            self.dx = abs(self.dx)
+            sound("bounce")
+
+        elif self.x+self.radius >= WIDTH:
+            self.x = WIDTH-self.radius
+            self.dx = -abs(self.dx)
+            sound("bounce")
+
+        # Top collision
+        if self.y-self.radius <= 48:
+            self.y = 48+self.radius
+            self.dy = abs(self.dy)
+            sound("bounce")
+
+        self.update_rect()
+
+        return self.y-self.radius > HEIGHT
+
+    def bounce_paddle(self, paddle):
+
+        offset = (
+            self.x-paddle.rect.centerx
+        )/(paddle.width/2)
+
+        self.dx = max(-0.9, min(0.9, offset))
+
+        if abs(self.dx) < 0.18:
+            self.dx = random.choice([-0.18, 0.18])
+
+        self.dy = -math.sqrt(
+            max(0.2, 1-self.dx*self.dx)
+        )
+
+        self.y = paddle.rect.top-self.radius-1
+
+        self.update_rect()
+        sound("bounce")
+
+    def bounce_brick(self, brick):
+
+        left = self.rect.right-brick.rect.left
+        right = brick.rect.right-self.rect.left
+        top = self.rect.bottom-brick.rect.top
+        bottom = brick.rect.bottom-self.rect.top
+
+        smallest = min(left, right, top, bottom)
+
+        if smallest in (left, right):
+            self.dx *= -1
+        else:
+            self.dy *= -1
+
+        self.update_rect()
+
+    def draw(self):
+        pygame.draw.circle(
+            screen, YELLOW,
+            (round(self.x), round(self.y)),
+            self.radius
+        )
+
+
+# ==================================================
+# BRICK CLASS
+# ==================================================
+
+class Brick:
+
+    def __init__(self, x, y, width, height, color, hits=1):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.color = color
+        self.hits = hits
+
+    def hit(self):
+        self.hits -= 1
+
+        if self.hits == 1:
+            self.color = WHITE
+
+        return self.hits <= 0
+
+    def draw(self):
+        pygame.draw.rect(
+            screen, self.color,
+            self.rect, border_radius=4
+        )
+
+        pygame.draw.rect(
+            screen, BLACK,
+            self.rect, 1, border_radius=4
+        )
+
+
+def create_bricks(level):
+
+    bricks = []
+
+    colors = [RED, GREEN, BLUE, PURPLE, CYAN]
+
+    columns = 12
+    rows = 4+level
+
+    width = 52
+    height = 19
+
+    gap_x = 10
+    gap_y = 9
+
+    total_width = columns*width+(columns-1)*gap_x
+    start_x = (WIDTH-total_width)//2
+
+    for row in range(rows):
+
+        for col in range(columns):
+
+            x = start_x+col*(width+gap_x)
+            y = 75+row*(height+gap_y)
+
+            hits = 2 if level >= 2 and (row+col)%4 == 0 else 1
+
+            color = WHITE if hits == 2 else colors[row%5]
+
+            bricks.append(
+                Brick(x, y, width, height, color, hits)
+            )
+
+    return bricks
+
+
