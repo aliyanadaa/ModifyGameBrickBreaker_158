@@ -795,3 +795,251 @@ def end_screen(message, score, record, new_record):
         clock.tick(FPS)
 
 
+# ==================================================
+# GAME ENGINE
+# ==================================================
+
+def play_game():
+
+    start_music()
+
+    score = 0
+    lives = 3
+    level = 1
+
+    direction = 0
+    paused = False
+
+    paddle = Paddle()
+    ball = Ball(5.2)
+
+    bricks = create_bricks(level)
+    powerups = []
+
+    while True:
+
+        clock.tick(FPS)
+
+        # EVENT HANDLING
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                stop_music()
+                return "exit", score
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_ESCAPE:
+                    stop_music()
+                    return "menu", score
+
+                if event.key == pygame.K_p:
+                    paused = not paused
+                    direction = 0
+
+                elif event.key == pygame.K_SPACE and paused:
+                    paused = False
+                    direction = 0
+
+                if not paused:
+
+                    if event.key == pygame.K_LEFT:
+                        direction = -1
+
+                    elif event.key == pygame.K_RIGHT:
+                        direction = 1
+
+            if event.type == pygame.KEYUP:
+
+                if event.key in (
+                    pygame.K_LEFT,
+                    pygame.K_RIGHT
+                ):
+                    direction = 0
+
+        # GAME UPDATE
+        if not paused:
+
+            paddle.update(direction)
+            life_lost = ball.update()
+
+            # PADDLE COLLISION
+            if (
+                ball.dy > 0
+                and ball.rect.colliderect(paddle.rect)
+            ):
+                ball.bounce_paddle(paddle)
+
+            # BRICK COLLISION
+            for brick in bricks[:]:
+
+                if ball.rect.colliderect(brick.rect):
+
+                    ball.bounce_brick(brick)
+
+                    destroyed = brick.hit()
+
+                    if destroyed:
+                        bricks.remove(brick)
+                        score += 10
+                        sound("brick")
+
+                        # Chance mendapatkan power-up
+                        if random.random() < 0.18:
+
+                            kind = random.choice([
+                                "wide", "slow", "life"
+                            ])
+
+                            powerups.append(
+                                PowerUp(
+                                    brick.rect.centerx,
+                                    brick.rect.centery,
+                                    kind
+                                )
+                            )
+                    else:
+                        sound("bounce")
+
+                    break
+
+            # POWER-UP UPDATE
+            for powerup in powerups[:]:
+
+                powerup.update()
+
+                if powerup.rect.colliderect(paddle.rect):
+
+                    if powerup.kind == "wide":
+                        paddle.big_size()
+
+                    elif powerup.kind == "slow":
+                        ball.slow_timer = FPS*7
+
+                    elif powerup.kind == "life":
+                        lives = min(5, lives+1)
+
+                    powerups.remove(powerup)
+                    sound("power")
+
+                elif powerup.y > HEIGHT:
+                    powerups.remove(powerup)
+
+            # BALL FALLS
+            if life_lost:
+
+                lives -= 1
+                sound("lose")
+
+                if lives <= 0:
+                    stop_music()
+                    return "gameover", score
+
+                ball.reset()
+                paddle = Paddle()
+                powerups.clear()
+                direction = 0
+
+                pygame.time.delay(400)
+
+            # LEVEL COMPLETED
+            if not bricks:
+
+                if level >= 3:
+                    sound("win")
+                    stop_music()
+                    return "win", score
+
+                level += 1
+
+                bricks = create_bricks(level)
+                powerups.clear()
+
+                ball = Ball(5.2+(level-1)*0.8)
+                paddle = Paddle()
+
+                direction = 0
+
+                pygame.time.delay(600)
+
+        # DRAW SCREEN
+        draw_game(
+            paddle,
+            ball,
+            bricks,
+            powerups,
+            score,
+            lives,
+            level,
+            paused
+        )
+
+
+# ==================================================
+# MAIN PROGRAM
+# ==================================================
+
+def main():
+
+    record = load_record()
+    player_name = "Player"
+
+    while True:
+
+        choice, player_name = main_menu(
+            record,
+            player_name
+        )
+
+        if choice == "exit":
+            break
+
+        result, score = play_game()
+
+        if result == "exit":
+            break
+
+        if result == "menu":
+            continue
+
+        # UPDATE HIGH SCORE
+        new_record = score > record["score"]
+
+        if new_record:
+
+            record = {
+                "name": player_name,
+                "score": score
+            }
+
+            save_record(player_name, score)
+
+        # END SCREEN
+        action = end_screen(
+            "GAME OVER" if result == "gameover" else "YOU WIN!",
+            score,
+            record,
+            new_record
+        )
+
+        if action == "exit":
+            break
+
+        elif action == "restart":
+            # Kembali ke menu untuk memulai sesi baru.
+            # High score tetap tersimpan.
+            continue
+
+        elif action == "menu":
+            continue
+
+    stop_music()
+    pygame.quit()
+
+
+# ==================================================
+# RUN GAME
+# ==================================================
+
+if __name__ == "__main__":
+    main()
